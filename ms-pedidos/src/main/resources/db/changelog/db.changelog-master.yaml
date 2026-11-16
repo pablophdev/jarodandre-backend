@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: 001-ventas.sql
+      relativeToChangelogFile: true
