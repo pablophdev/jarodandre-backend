@@ -20,7 +20,8 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.GET, "/v1/categorias", "/v1/productos", "/v1/productos/*",
-                                "/v1/publicaciones", "/v1/publicaciones/*", "/media/**").permitAll()
+                                "/v1/publicaciones", "/v1/publicaciones/*", "/media/**",
+                                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/v1/admin/**").access(admin)
                         .requestMatchers(HttpMethod.POST, "/interno/v1/cotizaciones").access((supplier, context) -> {
                             var auth = supplier.get();

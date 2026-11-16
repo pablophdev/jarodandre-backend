@@ -13,6 +13,10 @@ Desde la carpeta del proyecto, con Java 21:
 
 El puerto predeterminado es 8082. Abrir http://localhost:8082/v1/productos/3 o http://localhost:8082/v1/publicaciones. El primer arranque crea la base H2 persistente en data/catalogo. Liquibase carga 4 categorías, 14 productos, 9 artículos y conserva los IDs, slugs y fechas editoriales del frontend. Los 23 archivos JPG originales se incluyen como recursos para servir la tienda local. Las imágenes se consultan mediante /media/ seguido de imagenKey o portadaKey.
 
+En desarrollo local, la documentación interactiva OpenAPI / Swagger UI está disponible en:
+- **Swagger UI:** http://localhost:8082/swagger-ui.html
+- **Especificación OpenAPI (JSON):** http://localhost:8082/v3/api-docs
+
 ## Estructura
 
 controller expone HTTP, service implementa las operaciones y transacciones, entity mapea el esquema catalogo, repository encapsula las consultas, dto define los contratos como records y config aplica autorización y CORS. application.properties contiene los valores compartidos. Los perfiles local y postgres tienen sus propios archivos .properties. Las migraciones están en src/main/resources/db/changelog. Hibernate valida las tablas al arrancar.

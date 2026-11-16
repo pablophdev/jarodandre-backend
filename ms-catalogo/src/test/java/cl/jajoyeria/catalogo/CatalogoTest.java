@@ -119,4 +119,17 @@ class CatalogoTest {
         mvc.perform(post("/interno/v1/cotizaciones").with(jwt().jwt(j -> j.claim("client_id","pedidos-test")).authorities(new SimpleGrantedAuthority("SCOPE_catalogo/cotizar")))
                 .contentType("application/json").content(data)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2));
     }
+
+    @Test
+    void swaggerYDocumentacionOpenApiDisponibles() throws Exception {
+        mvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openapi").isString())
+                .andExpect(jsonPath("$.info.title").value("JA Joyería · ms-catalogo API"))
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.PedidosServiceAuth").exists());
+
+        mvc.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+    }
 }
