@@ -8,7 +8,7 @@ Backend distribuido para la tienda de comercio electrónico **JA Joyería**, des
 |---|---|---|---|---|
 | **[ms-auth](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-auth)** | `8081` | Identidad, perfiles, validación de RUT chileno, regiones y comunas, control de roles y estados. | H2 (`data/identidad`) / PostgreSQL (`identidad`) | Rutas base `/v1/regiones`, `/v1/me` |
 | **[ms-catalogo](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-catalogo)** | `8082` | Catálogo de joyas, categorías, blog editorial, recursos multimedia (S3/disco) y cotizaciones por lote. | H2 (`data/catalogo`) / PostgreSQL (`catalogo`) | [Swagger UI](http://localhost:8082/swagger-ui.html) · [OpenAPI JSON](http://localhost:8082/v3/api-docs) |
-| **[ms-pedidos](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-pedidos)** | `8083` | Carritos anónimos y de usuario, checkout idempotente, pagos simulados, comprobantes BOL y reportes. | H2 (`data/ventas`) / PostgreSQL (`ventas`) | Rutas base `/v1/carrito`, `/v1/checkout` |
+| **[ms-pedidos](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-pedidos)** | `8083` | Carritos anónimos y de usuario, checkout idempotente, pagos simulados, comprobantes BOL y reportes. | H2 (`data/ventas`) / PostgreSQL (`ventas`) | [Swagger UI](http://localhost:8083/swagger-ui.html) · [OpenAPI JSON](http://localhost:8083/v3/api-docs) |
 | **[ms-comunicaciones](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-comunicaciones)** | `8084` | Formulario de contacto público, suscripciones a newsletter y bandeja de entrada administrativa. | H2 (`data/comunicaciones`) / PostgreSQL (`comunicaciones`) | [Swagger UI](http://localhost:8084/swagger-ui.html) · [OpenAPI JSON](http://localhost:8084/v3/api-docs) |
 
 ---
@@ -38,6 +38,7 @@ cd ms-catalogo
 Los microservicios documentados exponen la interfaz interactiva de Swagger UI durante el desarrollo local:
 
 - **ms-catalogo:** [http://localhost:8082/swagger-ui.html](http://localhost:8082/swagger-ui.html) (definición JSON en `/v3/api-docs`)
+- **ms-pedidos:** [http://localhost:8083/swagger-ui.html](http://localhost:8083/swagger-ui.html) (definición JSON en `/v3/api-docs`)
 - **ms-comunicaciones:** [http://localhost:8084/swagger-ui.html](http://localhost:8084/swagger-ui.html) (definición JSON en `/v3/api-docs`)
 
 ### Autenticación en Swagger UI

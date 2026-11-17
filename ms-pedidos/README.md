@@ -21,6 +21,10 @@ Catálogo escucha en 8082 y pedidos en 8083. La compra como invitado funciona co
 
 En el perfil local, application-local.properties usa H2 persistente en data/ventas. Liquibase crea ventas.carritos, carrito_items, pedidos, pedido_items, intentos_pago y accesos_invitado mediante resources/db/changelog. Hibernate valida el esquema al arrancar. El servicio conserva solo hashes de los secretos de invitados.
 
+En desarrollo local, la documentación interactiva OpenAPI / Swagger UI está disponible en:
+- **Swagger UI:** http://localhost:8083/swagger-ui.html
+- **Especificación OpenAPI (JSON):** http://localhost:8083/v3/api-docs
+
 ## Probar una compra como invitado
 
 ```powershell

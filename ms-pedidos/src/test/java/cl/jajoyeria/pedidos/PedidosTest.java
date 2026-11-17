@@ -126,4 +126,18 @@ class PedidosTest {
         api.perform(get("/v1/admin/reportes/ventas").with(admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.productosMasVendidos[0].productoId").value(3));
     }
+
+    @Test
+    void swaggerYDocumentacionOpenApiDisponibles() throws Exception {
+        api.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openapi").isString())
+                .andExpect(jsonPath("$.info.title").value("JA Joyería · ms-pedidos API"))
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth").exists())
+                .andExpect(jsonPath("$.paths['/v1/checkout'].post").exists())
+                .andExpect(jsonPath("$.paths['/v1/admin/reportes/ventas'].get").exists());
+
+        api.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+    }
 }

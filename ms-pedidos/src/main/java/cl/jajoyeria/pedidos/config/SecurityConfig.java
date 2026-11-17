@@ -19,6 +19,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
+                        .requestMatchers(HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/v1/admin/**", "/v1/mis-pedidos", "/v1/pedidos/*/vincular").authenticated()
                         .requestMatchers("/v1/carrito", "/v1/carrito/**", "/v1/checkout", "/v1/pedidos/*",
                                 "/v1/pedidos/*/comprobante", "/v1/pedidos/*/pago-simulado").permitAll()
