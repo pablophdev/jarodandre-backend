@@ -20,6 +20,7 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.POST, "/v1/contacto", "/v1/suscripciones").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/v1/admin/**").access(admin)
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(o -> o.jwt(jwt -> {}))

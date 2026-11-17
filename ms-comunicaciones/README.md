@@ -13,6 +13,10 @@ Con Java 21, desde esta carpeta:
 
 Puerto predeterminado 8084. El perfil local usa H2 persistente en data/comunicaciones. Liquibase crea las tablas mensajes_contacto y suscripciones en el esquema comunicaciones. Las migraciones viven en src/main/resources/db/changelog. Hibernate valida las tablas al iniciar. La aplicación sigue la organización controller, entity, repository, service, dto y config de los otros microservicios.
 
+En desarrollo local, la documentación interactiva OpenAPI / Swagger UI está disponible en:
+- **Swagger UI:** http://localhost:8084/swagger-ui.html
+- **Especificación OpenAPI (JSON):** http://localhost:8084/v3/api-docs
+
 ## Formularios públicos
 
 ```powershell

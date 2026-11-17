@@ -104,4 +104,16 @@ class ComunicacionesTest {
         api.perform(post("/v1/suscripciones").contentType("application/json").content(body)).andExpect(jsonPath("$.estado").value("REACTIVADA"));
         api.perform(get("/v1/admin/suscriptores").with(admin)).andExpect(jsonPath("$.content[0].id").value((int)id));
     }
+
+    @Test
+    void swaggerYDocumentacionOpenApiDisponibles() throws Exception {
+        api.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openapi").isString())
+                .andExpect(jsonPath("$.info.title").value("JA Joyería · ms-comunicaciones API"))
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth").exists());
+
+        api.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+    }
 }
