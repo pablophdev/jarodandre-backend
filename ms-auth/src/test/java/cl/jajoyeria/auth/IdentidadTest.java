@@ -62,4 +62,18 @@ class IdentidadTest {
                         .contentType("application/json").content(PERFIL.replace("678-5","678-4")))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void swaggerYDocumentacionOpenApiDisponibles() throws Exception {
+        mvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openapi").isString())
+                .andExpect(jsonPath("$.info.title").value("JA Joyería · ms-auth API"))
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth").exists())
+                .andExpect(jsonPath("$.paths['/v1/me'].post").exists())
+                .andExpect(jsonPath("$.paths['/v1/admin/usuarios/{id}/acceso'].patch").exists());
+
+        mvc.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+    }
 }

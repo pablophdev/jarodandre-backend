@@ -19,6 +19,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
+                        .requestMatchers(HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/v1/regiones", "/v1/regiones/*/comunas").permitAll()
                         .requestMatchers("/v1/me", "/v1/admin/usuarios", "/v1/admin/usuarios/**").authenticated()
                         .anyRequest().denyAll())

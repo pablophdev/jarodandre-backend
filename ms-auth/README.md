@@ -13,6 +13,10 @@ Desde esta carpeta, con un JDK 21 y JAVA_HOME configurado:
 
 El perfil predeterminado local crea una base H2 en data/identidad y aplica las migraciones. GET http://localhost:8081/v1/regiones permite comprobar el arranque. Sin configurar Cognito, las rutas privadas devuelven 401. Los tests ejecutan esas rutas con identidades de prueba en una base en memoria.
 
+En desarrollo local, la documentación interactiva OpenAPI / Swagger UI está disponible en:
+- **Swagger UI:** http://localhost:8081/swagger-ui.html
+- **Especificación OpenAPI (JSON):** http://localhost:8081/v3/api-docs
+
 ## Estructura compartida
 
 Bajo src/main/java/cl/jajoyeria/auth, controller expone HTTP, service aplica reglas y delimita transacciones, repository accede a JPA, entity mapea tablas, dto contiene records y config configura seguridad y CORS. En src/main/resources se encuentran application.properties, los archivos de perfil y db/changelog. Para evolucionar la base, agregar un changeset y referenciarlo desde el changelog maestro.
