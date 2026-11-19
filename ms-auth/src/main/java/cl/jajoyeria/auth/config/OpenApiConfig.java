@@ -29,6 +29,6 @@ public class OpenApiConfig {
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
-                                .description("Token Bearer JWT emitido por AWS Cognito. Requerido para operaciones de perfil y administración; las operaciones administrativas requieren rol ADMIN y estado ACTIVO.")));
+                                .description("Autenticación pendiente de configurar. Las operaciones privadas y administrativas permanecen bloqueadas.")));
     }
 }

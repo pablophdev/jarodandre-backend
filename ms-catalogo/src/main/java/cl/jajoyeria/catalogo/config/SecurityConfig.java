@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.core.*;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
@@ -14,7 +13,7 @@ import org.springframework.http.HttpMethod;
 @Configuration
 public class SecurityConfig {
     @Bean
-    SecurityFilterChain api(HttpSecurity http, AdminAuthorization admin, @Value("${app.pedidos.client-id}") String pedidosId) throws Exception {
+    SecurityFilterChain api(HttpSecurity http, AdminAuthorization admin, @Value("${app.catalogo.internal-token}") String internalToken) throws Exception {
         return http.cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -24,10 +23,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/v1/admin/**").access(admin)
                         .requestMatchers(HttpMethod.POST, "/interno/v1/cotizaciones").access((supplier, context) -> {
-                            var auth = supplier.get();
-                            boolean permitido = auth instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken token
-                                    && !pedidosId.isBlank() && pedidosId.equals(token.getToken().getClaimAsString("client_id"))
-                                    && token.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("SCOPE_catalogo/cotizar"));
+                            String token = context.getRequest().getHeader("X-Internal-Token");
+                            boolean permitido = !internalToken.isBlank() && token != null
+                                    && java.security.MessageDigest.isEqual(internalToken.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                                            token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                             return new org.springframework.security.authorization.AuthorizationDecision(permitido);
                         })
                         .anyRequest().denyAll())
@@ -36,23 +35,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtDecoder decoder(@Value("${app.auth.issuer}") String issuer,
-                       @Value("${app.auth.client-id}") String clientId,
-                       @Value("${app.pedidos.client-id:}") String pedidosId) {
-        if (clientId.isBlank() || issuer.isBlank()) {
-            return token -> { throw new BadJwtException("Cognito sin configurar"); };
-        }
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(issuer + "/.well-known/jwks.json").build();
-        OAuth2TokenValidator<Jwt> claims = jwt -> {
-            if ("access".equals(jwt.getClaimAsString("token_use"))
-                    && (clientId.equals(jwt.getClaimAsString("client_id")) || (!pedidosId.isBlank() && pedidosId.equals(jwt.getClaimAsString("client_id"))))
-                    && jwt.getExpiresAt() != null) {
-                return OAuth2TokenValidatorResult.success();
-            }
-            return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token"));
-        };
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer(issuer), claims));
-        return decoder;
+    JwtDecoder decoder() {
+        return token -> { throw new BadJwtException("Autenticación sin configurar"); };
     }
 
     @Bean

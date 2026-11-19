@@ -26,7 +26,7 @@ public class UsuarioController {
     private final UsuarioService usuarios;
     private final CorreoVerificado correo;
 
-    @Operation(summary = "Crear perfil", description = "Crea el perfil asociado a la identidad del token Cognito. El correo se obtiene del proveedor de identidad y el RUT se valida y normaliza.")
+    @Operation(summary = "Crear perfil", description = "Operación privada pendiente de configurar el proveedor de identidad y la verificación de correo.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Perfil creado"),
             @ApiResponse(responseCode = "400", description = "RUT, comuna o datos del perfil inválidos"),
@@ -40,7 +40,7 @@ public class UsuarioController {
         return usuarios.registrar(UUID.fromString(jwt.getSubject()), correo.obtener(jwt), datos);
     }
 
-    @Operation(summary = "Consultar perfil", description = "Devuelve el perfil activo asociado a la identidad del token Cognito.")
+    @Operation(summary = "Consultar perfil", description = "Devuelve el perfil activo de la identidad autenticada. El proveedor de autenticación está pendiente de configurar.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Perfil obtenido"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),

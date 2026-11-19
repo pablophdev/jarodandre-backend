@@ -20,10 +20,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties={"spring.profiles.active=local",
-        "spring.datasource.url=jdbc:h2:mem:comunicaciones;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"})
+@SpringBootTest
 @AutoConfigureMockMvc
-class ComunicacionesTest {
+class ComunicacionesTest extends PostgresIntegrationTest {
     @Autowired MockMvc api;
     @Test
     void permitePreflightDelFrontend() throws Exception {

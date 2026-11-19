@@ -1,57 +1,45 @@
 # JA Joyería · Backend
 
-El frontend de `../ja-joyeria/jarodandre` consume las cuatro APIs. Consulta [la guía de integración](../ja-joyeria/INTEGRACION.md). `start-local.ps1` abre los servicios y Vite en terminales separadas; no modifica bases de datos.
+Microservicios Java 21 y Spring Boot 3.5.16 para la tienda de joyería.
 
-La configuración local no contiene valores ficticios de Cognito. Las APIs públicas y el checkout de invitado funcionan sin credenciales; las rutas autenticadas rechazan tokens hasta configurar `COGNITO_ISSUER`, `COGNITO_CLIENT_ID` y, en ms-auth, `COGNITO_USERINFO_URL`. No se ha deshabilitado la seguridad.
+| Servicio | Puerto | Esquema SQL |
+|---|---|---|
+| ms-auth | 8081 | identidad |
+| ms-catalogo | 8082 | catalogo |
+| ms-pedidos | 8083 | ventas |
+| ms-comunicaciones | 8084 | comunicaciones |
 
-Backend distribuido para la tienda de comercio electrónico **JA Joyería**, desarrollado en **Java 21 LTS** y **Spring Boot 3.5.16**.
+## Estado
 
-## Arquitectura de Microservicios
+- No hay un proveedor de identidad configurado. Registro, login y administración permanecen bloqueados.
+- No se incluye una base de datos embebida ni credenciales de una base remota.
+- Se conservan las entidades, repositorios y migraciones de negocio.
+- El frontend sigue consumiendo las APIs públicas y de invitado cuando los servicios tienen una base PostgreSQL configurada.
 
-| Microservicio | Puerto | Descripción | Base de Datos | Documentación Interactiva (Local) |
-|---|---|---|---|---|
-| **[ms-auth](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-auth)** | `8081` | Identidad, perfiles, validación de RUT chileno, regiones y comunas, control de roles y estados. | H2 (`data/identidad`) / PostgreSQL (`identidad`) | [Swagger UI](http://localhost:8081/swagger-ui.html) · [OpenAPI JSON](http://localhost:8081/v3/api-docs) |
-| **[ms-catalogo](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-catalogo)** | `8082` | Catálogo de joyas, categorías, blog editorial, recursos multimedia (S3/disco) y cotizaciones por lote. | H2 (`data/catalogo`) / PostgreSQL (`catalogo`) | [Swagger UI](http://localhost:8082/swagger-ui.html) · [OpenAPI JSON](http://localhost:8082/v3/api-docs) |
-| **[ms-pedidos](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-pedidos)** | `8083` | Carritos anónimos y de usuario, checkout idempotente, pagos simulados, comprobantes BOL y reportes. | H2 (`data/ventas`) / PostgreSQL (`ventas`) | [Swagger UI](http://localhost:8083/swagger-ui.html) · [OpenAPI JSON](http://localhost:8083/v3/api-docs) |
-| **[ms-comunicaciones](file:///C:/Users/Pablo/Desktop/jarodandre-backend/ms-comunicaciones)** | `8084` | Formulario de contacto público, suscripciones a newsletter y bandeja de entrada administrativa. | H2 (`data/comunicaciones`) / PostgreSQL (`comunicaciones`) | [Swagger UI](http://localhost:8084/swagger-ui.html) · [OpenAPI JSON](http://localhost:8084/v3/api-docs) |
+## Persistencia
 
----
+La infraestructura SQL es genérica para PostgreSQL. Antes de iniciar un servicio, define `DB_URL` (JDBC), `DB_USERNAME` y `DB_PASSWORD` en su entorno. El perfil predeterminado es `postgres`.
 
-## Ejecución en Desarrollo Local
-
-Cada microservicio cuenta con su propio **Maven Wrapper** (`mvnw.cmd` en Windows / `mvnw` en Linux/macOS) y perfil `local` predeterminado con base de datos H2 embebida persistente en `./data/`.
-
-Para ejecutar un servicio:
+No se crea ni se conecta automáticamente a una base de un proveedor externo.
 
 ```powershell
-cd ms-catalogo        # O ms-auth, ms-pedidos, ms-comunicaciones
+cd ms-pedidos # o ms-auth, ms-catalogo, ms-comunicaciones
 .\mvnw.cmd spring-boot:run
 ```
 
-Para ejecutar las pruebas automatizadas:
+## Comunicación y seguridad
+
+- Las rutas de usuarios y administración exigen autenticación y rechazan todos los tokens mientras no se configure un proveedor.
+- Catálogo y pedidos comparten `CATALOGO_INTERNAL_TOKEN` para las cotizaciones internas. Nunca se envía al navegador.
+- `MS_AUTH_URL` y `MS_CATALOGO_URL` permiten configurar las direcciones entre servicios.
+- CORS admite únicamente `FRONTEND_ORIGIN` (predeterminado `http://localhost:5173`).
+- `PAGO_SIMULADO=true` habilita pagos de demostración sin cobros reales.
+- `SWAGGER_ENABLED=true` habilita `/swagger-ui/index.html` y `/v3/api-docs`.
+
+## Pruebas
 
 ```powershell
-cd ms-catalogo
-.\mvnw.cmd test
+.\mvnw.cmd clean test
 ```
 
----
-
-## Documentación Swagger / OpenAPI
-
-Los microservicios documentados exponen la interfaz interactiva de Swagger UI durante el desarrollo local:
-
-- **ms-catalogo:** [http://localhost:8082/swagger-ui.html](http://localhost:8082/swagger-ui.html) (definición JSON en `/v3/api-docs`)
-- **ms-auth:** [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html) (definición JSON en `/v3/api-docs`)
-- **ms-pedidos:** [http://localhost:8083/swagger-ui.html](http://localhost:8083/swagger-ui.html) (definición JSON en `/v3/api-docs`)
-- **ms-comunicaciones:** [http://localhost:8084/swagger-ui.html](http://localhost:8084/swagger-ui.html) (definición JSON en `/v3/api-docs`)
-
-### Autenticación en Swagger UI
-En la interfaz visual, puedes hacer clic en el botón verde **"Authorize"** e ingresar un token Bearer JWT para probar endpoints administrativos protegidos (`/v1/admin/**`).
-
----
-
-## Seguridad e Integración con AWS Cognito
-
-- **Usuarios y Administradores:** Los clientes y administradores inician sesión mediante el Hosted UI de AWS Cognito (OAuth 2.0 Authorization Code + PKCE). El frontend envía el Bearer JWT a las APIs.
-- **Comunicación M2M:** La cotización de precios entre `ms-pedidos` y `ms-catalogo` utiliza OAuth 2.0 Client Credentials con el scope `catalogo/cotizar`.
+Las pruebas SQL utilizan PostgreSQL efímero con Testcontainers y requieren Docker activo. Si no está disponible, se omiten explícitamente. Las pruebas unitarias no necesitan Docker.

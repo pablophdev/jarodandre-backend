@@ -5,7 +5,6 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,11 +16,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = {"spring.profiles.active=local", "app.pedidos.client-id=pedidos-test",
-        "spring.datasource.url=jdbc:h2:mem:catalogo;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"})
+@SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class CatalogoTest {
+class CatalogoTest extends PostgresIntegrationTest {
     @Autowired MockMvc mvc;
     @Test
     void permitePreflightDelFrontend() throws Exception {
@@ -125,7 +123,9 @@ class CatalogoTest {
         String data = "{\"productoIds\":[1,3]}";
         mvc.perform(post("/interno/v1/cotizaciones").contentType("application/json").content(data))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(post("/interno/v1/cotizaciones").with(jwt().jwt(j -> j.claim("client_id","pedidos-test")).authorities(new SimpleGrantedAuthority("SCOPE_catalogo/cotizar")))
+        mvc.perform(post("/interno/v1/cotizaciones").header("X-Internal-Token", "incorrecto")
+                .contentType("application/json").content(data)).andExpect(status().isUnauthorized());
+        mvc.perform(post("/interno/v1/cotizaciones").header("X-Internal-Token", "test-internal-token")
                 .contentType("application/json").content(data)).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2));
     }
 

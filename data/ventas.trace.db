@@ -1,4 +1,0 @@
-2026-11-16 22:03:13.335581-03:00 jdbc[3]: exception
-org.h2.jdbc.JdbcSQLSyntaxErrorException: Tabla "ventas_databasechangeloglock" no encontrada
-Table "ventas_databasechangeloglock" not found; SQL statement:
-SELECT COUNT(*) FROM public.VENTAS_DATABASECHANGELOGLOCK [42102-232]

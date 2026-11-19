@@ -29,12 +29,11 @@ public class OpenApiConfig {
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
-                                .description("Token Bearer JWT emitido por AWS Cognito. Requerido para operaciones de administración (/v1/admin/**) con rol ADMIN y estado ACTIVO."))
+                                .description("Autenticación pendiente de configurar. La administración permanece bloqueada."))
                         .addSecuritySchemes("PedidosServiceAuth", new SecurityScheme()
-                                .name("PedidosServiceAuth")
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                                .description("Token OAuth2 M2M con scope 'catalogo/cotizar' para ms-pedidos (/interno/v1/cotizaciones).")));
+                                .name("X-Internal-Token")
+                                .in(SecurityScheme.In.HEADER)
+                                .type(SecurityScheme.Type.APIKEY)
+                                .description("Secreto exclusivo de catálogo y pedidos. Nunca debe enviarse al frontend.")));
     }
 }

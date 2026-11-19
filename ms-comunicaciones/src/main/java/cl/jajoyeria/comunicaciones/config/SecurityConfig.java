@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.core.*;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
@@ -28,22 +27,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtDecoder decoder(@Value("${app.auth.issuer}") String issuer,
-                       @Value("${app.auth.client-id}") String clientId) {
-        if (clientId.isBlank() || issuer.isBlank()) {
-            return token -> { throw new BadJwtException("Cognito sin configurar"); };
-        }
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(issuer + "/.well-known/jwks.json").build();
-        OAuth2TokenValidator<Jwt> claims = jwt -> {
-            if ("access".equals(jwt.getClaimAsString("token_use"))
-                    && clientId.equals(jwt.getClaimAsString("client_id"))
-                    && jwt.getExpiresAt() != null && jwt.getSubject() != null) {
-                return OAuth2TokenValidatorResult.success();
-            }
-            return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token"));
-        };
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer(issuer), claims));
-        return decoder;
+    JwtDecoder decoder() {
+        return token -> { throw new BadJwtException("Autenticación sin configurar"); };
     }
 
     @Bean

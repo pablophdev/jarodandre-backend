@@ -15,17 +15,19 @@ import static org.springframework.test.web.client.ExpectedCount.twice;
 
 class ClientesHttpTest {
     @Test
+    void cotizacionSinSecretoFallaCerrada() {
+        var catalogo = new CatalogoClient(RestClient.create(), "https://catalogo.test", "");
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE,
+                assertThrows(ResponseStatusException.class, () -> catalogo.cotizar(List.of(3L))).getStatusCode());
+    }
+
+    @Test
     void credencialesDeServicioYCotizacionPorLote() {
         var builder = RestClient.builder();
         var server = MockRestServiceServer.bindTo(builder).build();
-        var catalogo = new CatalogoClient(builder.build(), "https://catalogo.test", "oauth",
-                "https://id.test/token", "pedidos", "prueba");
-        server.expect(requestTo("https://id.test/token")).andExpect(method(HttpMethod.POST))
-                .andExpect(header(HttpHeaders.AUTHORIZATION,"Basic cGVkaWRvczpwcnVlYmE="))
-                .andExpect(content().string("grant_type=client_credentials&scope=catalogo%2Fcotizar"))
-                .andRespond(withSuccess("{\"access_token\":\"test\",\"expires_in\":3600}",MediaType.APPLICATION_JSON));
+        var catalogo = new CatalogoClient(builder.build(), "https://catalogo.test", "test-internal-token");
         server.expect(twice(),requestTo("https://catalogo.test/interno/v1/cotizaciones"))
-                .andExpect(header(HttpHeaders.AUTHORIZATION,"Bearer test"))
+                .andExpect(header("X-Internal-Token","test-internal-token"))
                 .andExpect(content().json("{\"productoIds\":[3]}"))
                 .andRespond(withSuccess("[{\"productoId\":3,\"nombre\":\"Anillo\",\"precioClp\":1000,\"disponibilidad\":\"DISPONIBLE\"}]",MediaType.APPLICATION_JSON));
         for (int i=0; i<2; i++) assertEquals(1000L,catalogo.cotizar(List.of(3L)).get(3L).precioClp());

@@ -126,7 +126,7 @@ public class CatalogoController {
             @ApiResponse(responseCode = "200", description = "Cotización completada"),
             @ApiResponse(responseCode = "409", description = "Conflicto: uno o más productos ya no existen o fueron archivados"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
-            @ApiResponse(responseCode = "403", description = "Token inválido o falta scope 'catalogo/cotizar'")
+            @ApiResponse(responseCode = "403", description = "Secreto interno inválido o acceso no autorizado")
     })
     @SecurityRequirement(name = "PedidosServiceAuth")
     @Tag(name = "Interno - Cotizaciones", description = "Comunicación inter-servicio máquina a máquina (M2M)")

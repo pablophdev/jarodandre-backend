@@ -9,15 +9,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
-        "spring.profiles.active=postgres",
-        "spring.datasource.url=jdbc:h2:mem:catalogodesact;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE",
-        "app.auth.issuer=",
-        "app.auth.client-id=",
-        "app.auth.base-url=http://localhost:8081",
-        "app.pedidos.client-id=pedidos-test"
+        "springdoc.api-docs.enabled=false",
+        "springdoc.swagger-ui.enabled=false"
 })
 @AutoConfigureMockMvc
-class SwaggerDesactivadoTest {
+class SwaggerDesactivadoTest extends PostgresIntegrationTest {
     @Autowired MockMvc mvc;
 
     @Test
