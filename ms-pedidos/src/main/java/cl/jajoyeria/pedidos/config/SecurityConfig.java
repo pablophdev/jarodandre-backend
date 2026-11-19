@@ -27,10 +27,7 @@ public class SecurityConfig {
                 .build();
     }
 
-    @Bean
-    JwtDecoder decoder() {
-        return token -> { throw new BadJwtException("Autenticación sin configurar"); };
-    }
+
 
     @Bean
     CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.origin}") String origin) {
