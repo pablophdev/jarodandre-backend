@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = {
         "spring.profiles.active=postgres",
         "spring.datasource.url=jdbc:h2:mem:catalogodesact;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE",
-        "app.auth.issuer=http://localhost:9999/unconfigured",
-        "app.auth.client-id=unconfigured",
+        "app.auth.issuer=",
+        "app.auth.client-id=",
         "app.auth.base-url=http://localhost:8081",
         "app.pedidos.client-id=pedidos-test"
 })

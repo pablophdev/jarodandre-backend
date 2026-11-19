@@ -1,0 +1,4 @@
+# Configuración privada del entorno (solo se versiona la plantilla).
+.env
+.env.*
+!.env.example

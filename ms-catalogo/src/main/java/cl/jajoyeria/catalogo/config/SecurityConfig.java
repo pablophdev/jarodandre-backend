@@ -39,7 +39,7 @@ public class SecurityConfig {
     JwtDecoder decoder(@Value("${app.auth.issuer}") String issuer,
                        @Value("${app.auth.client-id}") String clientId,
                        @Value("${app.pedidos.client-id:}") String pedidosId) {
-        if ("unconfigured".equals(clientId)) {
+        if (clientId.isBlank() || issuer.isBlank()) {
             return token -> { throw new BadJwtException("Cognito sin configurar"); };
         }
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(issuer + "/.well-known/jwks.json").build();
@@ -56,7 +56,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    CorsConfigurationSource cors(@Value("${app.cors.origin}") String origin) {
+    CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.origin}") String origin) {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(origin));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));

@@ -25,6 +25,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class ComunicacionesTest {
     @Autowired MockMvc api;
+    @Test
+    void permitePreflightDelFrontend() throws Exception {
+        api.perform(options("/v1/suscripciones")
+                .header("Origin", "http://localhost:5173")
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
+    }
     @Autowired ObjectMapper json;
     static HttpServer auth;
 

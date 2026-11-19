@@ -1,5 +1,9 @@
 # JA Joyería · Backend
 
+El frontend de `../ja-joyeria/jarodandre` consume las cuatro APIs. Consulta [la guía de integración](../ja-joyeria/INTEGRACION.md). `start-local.ps1` abre los servicios y Vite en terminales separadas; no modifica bases de datos.
+
+La configuración local no contiene valores ficticios de Cognito. Las APIs públicas y el checkout de invitado funcionan sin credenciales; las rutas autenticadas rechazan tokens hasta configurar `COGNITO_ISSUER`, `COGNITO_CLIENT_ID` y, en ms-auth, `COGNITO_USERINFO_URL`. No se ha deshabilitado la seguridad.
+
 Backend distribuido para la tienda de comercio electrónico **JA Joyería**, desarrollado en **Java 21 LTS** y **Spring Boot 3.5.16**.
 
 ## Arquitectura de Microservicios

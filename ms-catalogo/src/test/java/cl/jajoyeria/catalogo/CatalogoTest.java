@@ -23,6 +23,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class CatalogoTest {
     @Autowired MockMvc mvc;
+    @Test
+    void permitePreflightDelFrontend() throws Exception {
+        mvc.perform(options("/v1/admin/imagenes")
+                .header("Origin", "http://localhost:5173")
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "authorization,content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
+    }
     static HttpServer auth;
 
     @DynamicPropertySource
