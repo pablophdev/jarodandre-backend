@@ -220,3 +220,35 @@ Las pruebas de integración usan Docker para preparar MySQL temporal. Las imáge
 ## Más adelante: producción
 
 La arquitectura planeada contempla el frontend y cada microservicio en AWS, con Amazon API Gateway como entrada para las APIs. Este Compose está hecho para desarrollo local. Antes de producción habrá que preparar HTTPS, secretos privados, una base protegida, almacenamiento externo de imágenes y un proveedor de pagos real.
+
+## Personalizador de grillz 3D
+
+`ms-catalogo` administra los acabados, las tarifas de referencia, los diseños guardados y las solicitudes de cotización. La migración `004-grillz.sql` agrega `catalogo.opciones_grillz` y `catalogo.disenos_grillz`, sin modificar las migraciones anteriores.
+
+Cada diseño guarda al propietario, el nombre, el modelo versionado (`arcada-v1`), la configuración por diente, el estimado del servidor y el estado `BORRADOR` o `SOLICITADO`. Una cuenta solo puede consultar y enviar sus propios diseños; la bandeja de solicitudes requiere administrador activo. Auth comprueba el estado de la cuenta.
+
+| Operación | Ruta en catálogo | Acceso |
+| --- | --- | --- |
+| Consultar acabados y tarifas | `GET /v1/grillz/opciones` | Público |
+| Obtener un estimado | `POST /v1/grillz/estimacion` | Público |
+| Guardar un diseño | `POST /v1/grillz/disenos` | Cuenta activa |
+| Recuperar mis diseños | `GET /v1/grillz/disenos?pagina=0` | Cuenta activa |
+| Solicitar cotización de un diseño | `POST /v1/grillz/disenos/{id}/cotizacion` | Propietario |
+| Ver solicitudes | `GET /v1/admin/grillz/cotizaciones?pagina=0` | Administrador |
+
+Ejemplo para guardar o calcular un diseño:
+
+```json
+{
+  "nombre": "Mi diseño",
+  "modelo": "arcada-v1",
+  "dientes": [
+    { "id": "S4", "material": "dorado", "estilo": "piedras" },
+    { "id": "I4", "material": "plata", "estilo": "liso" }
+  ]
+}
+```
+
+Los dientes válidos son `S1` a `S8` e `I1` a `I8`, de izquierda a derecha en la vista frontal. El servidor rechaza repeticiones y opciones inexistentes, asigna al propietario desde la sesión y calcula el precio usando `opciones_grillz`; no acepta un precio enviado por el navegador. Las tarifas iniciales por diente son: dorado $35.000, plateado $25.000 y oro rosado $38.000; piedras agrega $18.000. Son referencias para desarrollo, pendientes de definir comercialmente.
+
+La solicitud conserva el diseño y el estimado guardados. Repetir el envío del mismo diseño no duplica la solicitud. La revisión del presupuesto y el ajuste son manuales; este flujo no crea un pedido ni cobra un pago. La descarga JPG se genera en el navegador y no necesita almacenar imágenes en la base.

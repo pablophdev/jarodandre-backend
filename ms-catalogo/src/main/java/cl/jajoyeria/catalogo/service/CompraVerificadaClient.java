@@ -30,14 +30,25 @@ public class CompraVerificadaClient {
         this.secreto=secreto;
     }
 
-    public Perfil verificar(Jwt jwt, long productoId) {
-        if (secreto.isBlank()) throw new ResponseStatusException(SERVICE_UNAVAILABLE,"No se pudo verificar la compra. Inténtalo más tarde.");
+    public Perfil verificarPerfil(Jwt jwt) {
         try {
             Perfil perfil=http.get().uri(authUrl+"/v1/me").headers(h->h.setBearerAuth(jwt.getTokenValue()))
                     .retrieve().body(Perfil.class);
             if (perfil==null || perfil.id()==null || !perfil.id().toString().equals(jwt.getSubject()) || !"ACTIVO".equals(perfil.estado())) {
                 throw new ResponseStatusException(FORBIDDEN,"Tu cuenta no tiene acceso activo.");
             }
+            return perfil;
+        } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden ex) {
+            throw new ResponseStatusException(FORBIDDEN,"Tu cuenta no tiene acceso activo.");
+        } catch (RestClientException ex) {
+            throw new ResponseStatusException(SERVICE_UNAVAILABLE,"No pudimos comprobar tu cuenta. Inténtalo más tarde.");
+        }
+    }
+
+    public Perfil verificar(Jwt jwt, long productoId) {
+        if (secreto.isBlank()) throw new ResponseStatusException(SERVICE_UNAVAILABLE,"No se pudo verificar la compra. Inténtalo más tarde.");
+        try {
+            Perfil perfil=verificarPerfil(jwt);
             Compra compra=http.get().uri(pedidosUrl+"/interno/v1/compras/verificar?usuarioId={usuario}&productoId={producto}",perfil.id(),productoId)
                     .header("X-Internal-Token",secreto).retrieve().body(Compra.class);
             if (compra==null || !compra.compraPagada()) throw new ResponseStatusException(FORBIDDEN,"Puedes valorar este producto después de comprarlo y confirmar el pago con tu cuenta.");
