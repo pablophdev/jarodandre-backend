@@ -225,7 +225,7 @@ La arquitectura planeada contempla el frontend y cada microservicio en AWS, con 
 
 `ms-catalogo` administra los acabados, las tarifas de referencia, los diseños guardados y las solicitudes de cotización. La migración `004-grillz.sql` agrega `catalogo.opciones_grillz` y `catalogo.disenos_grillz`, sin modificar las migraciones anteriores.
 
-Cada diseño guarda al propietario, el nombre, el modelo versionado (`arcada-v1`), la configuración por diente, el estimado del servidor y el estado `BORRADOR` o `SOLICITADO`. Una cuenta solo puede consultar y enviar sus propios diseños; la bandeja de solicitudes requiere administrador activo. Auth comprueba el estado de la cuenta.
+Cada diseño guarda al propietario, el nombre, el modelo versionado (`arcada-v1` o `arcada-v2`), la configuración por diente, el estimado del servidor y el estado `BORRADOR` o `SOLICITADO`. Una cuenta solo puede consultar y enviar sus propios diseños; la bandeja de solicitudes requiere administrador activo. Auth comprueba el estado de la cuenta.
 
 | Operación | Ruta en catálogo | Acceso |
 | --- | --- | --- |
@@ -241,7 +241,7 @@ Ejemplo para guardar o calcular un diseño:
 ```json
 {
   "nombre": "Mi diseño",
-  "modelo": "arcada-v1",
+  "modelo": "arcada-v2",
   "dientes": [
     { "id": "S4", "material": "dorado", "estilo": "piedras" },
     { "id": "I4", "material": "plata", "estilo": "liso" }
@@ -252,3 +252,5 @@ Ejemplo para guardar o calcular un diseño:
 Los dientes válidos son `S1` a `S8` e `I1` a `I8`, de izquierda a derecha en la vista frontal. El servidor rechaza repeticiones y opciones inexistentes, asigna al propietario desde la sesión y calcula el precio usando `opciones_grillz`; no acepta un precio enviado por el navegador. Las tarifas iniciales por diente son: dorado $35.000, plateado $25.000 y oro rosado $38.000; piedras agrega $18.000. Son referencias para desarrollo, pendientes de definir comercialmente.
 
 La solicitud conserva el diseño y el estimado guardados. Repetir el envío del mismo diseño no duplica la solicitud. La revisión del presupuesto y el ajuste son manuales; este flujo no crea un pedido ni cobra un pago. La descarga JPG se genera en el navegador y no necesita almacenar imágenes en la base.
+
+La migración `005-grillz-disenos.sql` agrega cinco estilos a los dos iniciales: marco abierto (+$12.000), piedra central (+$14.000), colmillo (+$16.000), rayas grabadas (+$8.000) y corazón (+$10.000), por diente. Son tarifas de referencia. `arcada-v2` admite los siete estilos y muestra la dentadura con encías. `arcada-v1` continúa admitiendo liso y piedras para reproducir diseños existentes; los acabados nuevos requieren actualizar la versión del diseño. Las migraciones ya aplicadas se conservan sin modificaciones.

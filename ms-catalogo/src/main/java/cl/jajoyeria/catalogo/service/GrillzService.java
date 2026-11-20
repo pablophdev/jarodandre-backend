@@ -17,10 +17,12 @@ public class GrillzService {
     private final ObjectMapper json;
     public List<OpcionGrillzResponse> opciones(){return opciones.findAll().stream().map(o -> new OpcionGrillzResponse(o.getCodigo(),o.getTipo(),o.getNombre(),o.getColor(),o.getPrecioClp())).toList();}
     public long estimar(GrillzRequest r) {
-        if(!"arcada-v1".equals(r.modelo())) throw new ResponseStatusException(BAD_REQUEST,"El modelo de grillz no es válido.");
+        if(!Set.of("arcada-v1","arcada-v2").contains(r.modelo())) throw new ResponseStatusException(BAD_REQUEST,"El modelo de grillz no es válido.");
         var ids=new HashSet<String>(); long total=0;
         for(var d:r.dientes()) {
             if(!d.id().matches("[SI][1-8]") || !ids.add(d.id())) throw new ResponseStatusException(BAD_REQUEST,"Selecciona dientes válidos, sin repetirlos.");
+            if("arcada-v1".equals(r.modelo()) && !Set.of("liso","piedras").contains(d.estilo()))
+                throw new ResponseStatusException(BAD_REQUEST,"Actualiza al modelo con encías para usar este diseño.");
             total+=opcion(d.material(),"MATERIAL").getPrecioClp()+opcion(d.estilo(),"ESTILO").getPrecioClp();
         }
         return total;

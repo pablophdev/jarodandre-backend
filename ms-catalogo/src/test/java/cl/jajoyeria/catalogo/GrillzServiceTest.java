@@ -38,4 +38,11 @@ class GrillzServiceTest {
     @Test void rechazaUnaVersionDeModeloDesconocida() {
         assertThrows(ResponseStatusException.class,()->servicio.estimar(new GrillzRequest("Mi diseño","otro",List.of())));
     }
+    @Test void aceptaElModeloNuevoConAcabadosNuevos() {
+        opcion("plata","MATERIAL",25000);opcion("ventana","ESTILO",12000);
+        assertEquals(37000,servicio.estimar(new GrillzRequest("Encías","arcada-v2",List.of(new GrillzRequest.Diente("S4","plata","ventana")))));
+    }
+    @Test void elModeloAnteriorNoAceptaAcabadosQueNoPuedeMostrar() {
+        assertThrows(ResponseStatusException.class,()->servicio.estimar(diseno(new GrillzRequest.Diente("S4","plata","ventana"))));
+    }
 }
