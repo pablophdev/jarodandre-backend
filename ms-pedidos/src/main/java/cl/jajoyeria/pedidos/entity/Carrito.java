@@ -6,7 +6,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(schema = "ventas", name = "carritos")
+@Table(catalog = "ventas", name = "carritos")
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

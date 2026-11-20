@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class IdentidadTest extends PostgresIntegrationTest {
+class IdentidadTest extends MysqlIntegrationTest {
     @Autowired MockMvc mvc;
     @Test
     void permitePreflightDelFrontend() throws Exception {
@@ -61,9 +61,9 @@ class IdentidadTest extends PostgresIntegrationTest {
                 .andExpect(status().isConflict());
         mvc.perform(get("/v1/me").with(cliente)).andExpect(status().isOk());
         mvc.perform(get("/v1/admin/usuarios").with(cliente)).andExpect(status().isForbidden());
-        jdbc.update("UPDATE identidad.usuarios SET rol='ADMIN' WHERE id=?", java.util.UUID.fromString(ID));
+        jdbc.update("UPDATE identidad.usuarios SET rol='ADMIN' WHERE id=UNHEX(REPLACE(?,'-',''))", ID);
         mvc.perform(get("/v1/admin/usuarios").with(cliente)).andExpect(status().isOk());
-        jdbc.update("UPDATE identidad.usuarios SET estado='BLOQUEADO' WHERE id=?", java.util.UUID.fromString(ID));
+        jdbc.update("UPDATE identidad.usuarios SET estado='BLOQUEADO' WHERE id=UNHEX(REPLACE(?,'-',''))", ID);
         mvc.perform(get("/v1/me").with(cliente)).andExpect(status().isForbidden());
     }
 

@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class PedidosTest extends PostgresIntegrationTest {
+class PedidosTest extends MysqlIntegrationTest {
     @Autowired MockMvc api;
     @Test
     void permitePreflightDeCheckout() throws Exception {

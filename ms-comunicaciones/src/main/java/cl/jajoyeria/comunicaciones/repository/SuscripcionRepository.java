@@ -7,8 +7,7 @@ import org.springframework.data.jpa.repository.*;
 public interface SuscripcionRepository extends JpaRepository<Suscripcion,Long> {
     @Modifying
     @Query(value = """
-            insert into comunicaciones.suscripciones (correo, alta_en) values (:correo, current_timestamp)
-            on conflict do nothing
+            insert ignore into comunicaciones.suscripciones (correo, alta_en) values (:correo, current_timestamp)
             """, nativeQuery = true)
     int insertar(String correo);
 

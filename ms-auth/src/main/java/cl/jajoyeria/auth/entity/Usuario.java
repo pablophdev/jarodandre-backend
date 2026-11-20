@@ -2,6 +2,8 @@ package cl.jajoyeria.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -9,7 +11,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(schema = "identidad", name = "usuarios")
+@Table(catalog = "identidad", name = "usuarios")
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Usuario {
@@ -34,9 +36,11 @@ public class Usuario {
     private Comuna comuna;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private Rol rol;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private Estado estado;
 
     private Instant creadoEn;

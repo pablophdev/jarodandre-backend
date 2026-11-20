@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 @Entity
-@Table(schema = "identidad", name = "comunas")
+@Table(catalog = "identidad", name = "comunas")
 @Getter
 public class Comuna {
     @Id

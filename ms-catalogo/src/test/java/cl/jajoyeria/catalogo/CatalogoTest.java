@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class CatalogoTest extends PostgresIntegrationTest {
+class CatalogoTest extends MysqlIntegrationTest {
     @Autowired MockMvc mvc;
     @Test
     void permitePreflightDelFrontend() throws Exception {

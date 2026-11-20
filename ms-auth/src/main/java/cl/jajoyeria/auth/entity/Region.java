@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 @Entity
-@Table(schema = "identidad", name = "regiones")
+@Table(catalog = "identidad", name = "regiones")
 @Getter
 public class Region {
     @Id

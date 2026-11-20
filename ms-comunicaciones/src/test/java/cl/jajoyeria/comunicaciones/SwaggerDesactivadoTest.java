@@ -13,11 +13,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "springdoc.swagger-ui.enabled=false"
 })
 @AutoConfigureMockMvc
-class SwaggerDesactivadoTest extends PostgresIntegrationTest {
+class SwaggerDesactivadoTest extends MysqlIntegrationTest {
     @Autowired MockMvc api;
 
     @Test
-    void swaggerDesactivadoEnPerfilPostgres() throws Exception {
+    void swaggerDesactivadoEnPerfilMysql() throws Exception {
         api.perform(get("/v3/api-docs")).andExpect(status().isNotFound());
         api.perform(get("/swagger-ui/index.html")).andExpect(status().isNotFound());
     }

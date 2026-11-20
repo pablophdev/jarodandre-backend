@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity
-@Table(schema = "comunicaciones", name = "mensajes_contacto")
+@Table(catalog = "comunicaciones", name = "mensajes_contacto")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MensajeContacto {

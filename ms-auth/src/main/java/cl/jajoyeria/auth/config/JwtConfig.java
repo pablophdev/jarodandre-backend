@@ -26,11 +26,23 @@ public class JwtConfig {
 
     @Bean
     public RSAKey rsaKey(
-            @Value("${app.jwt.private-key:file:/etc/jarodandre-keys/private.pem}")
+            @Value("${app.jwt.private-key:file:./data/keys/private.pem}")
             Resource privateResource,
-            @Value("${app.jwt.public-key:file:/etc/jarodandre-keys/public.pem}")
-            Resource publicResource
+            @Value("${app.jwt.public-key:file:./data/keys/public.pem}")
+            Resource publicResource,
+            @Value("${app.jwt.generate-local-keys:true}") boolean generarClaves
     ) throws IOException {
+        if (generarClaves && !privateResource.exists() && !publicResource.exists()) {
+            try {
+                var generator = java.security.KeyPairGenerator.getInstance("RSA");
+                generator.initialize(2048);
+                var pair = generator.generateKeyPair();
+                guardarPem(privateResource, "PRIVATE KEY", pair.getPrivate().getEncoded());
+                guardarPem(publicResource, "PUBLIC KEY", pair.getPublic().getEncoded());
+            } catch (java.security.NoSuchAlgorithmException ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
         RSAPrivateKey privateKey;
         RSAPublicKey publicKey;
 
@@ -56,6 +68,14 @@ public class JwtConfig {
                 .keyUse(KeyUse.SIGNATURE)
                 .algorithm(JWSAlgorithm.RS256)
                 .build();
+    }
+
+    private void guardarPem(Resource resource, String tipo, byte[] bytes) throws IOException {
+        var archivo = resource.getFile().toPath();
+        java.nio.file.Files.createDirectories(archivo.toAbsolutePath().getParent());
+        String encoded = java.util.Base64.getMimeEncoder(64, new byte[]{'\n'}).encodeToString(bytes);
+        java.nio.file.Files.writeString(archivo, "-----BEGIN " + tipo + "-----\n" + encoded
+                + "\n-----END " + tipo + "-----\n", java.nio.file.StandardOpenOption.CREATE_NEW);
     }
 
     @Bean

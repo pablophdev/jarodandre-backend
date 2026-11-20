@@ -64,6 +64,13 @@ public class AuthService {
         return tokens.emitir(respuesta);
     }
 
+    @Transactional
+    public UsuarioResponse crearUsuario(UUID actor, CrearUsuarioRequest datos) {
+        perfiles.listar(actor, org.springframework.data.domain.PageRequest.of(0, 1));
+        var cuenta = registrar(datos.registro());
+        return perfiles.acceso(actor, cuenta.usuario().id(), new AccesoRequest(datos.rol(), datos.estado()));
+    }
+
     @Transactional(readOnly = true)
     public TokenResponse login(LoginRequest datos) {
         if (datos.password().getBytes(StandardCharsets.UTF_8).length > 72) {

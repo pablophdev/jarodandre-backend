@@ -1,12 +1,14 @@
 package cl.jajoyeria.pedidos.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(schema = "ventas", name = "intentos_pago")
+@Table(catalog = "ventas", name = "intentos_pago")
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -19,6 +21,7 @@ public class IntentoPago {
     private String referenciaExterna;
     private Long montoClp;
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Setter
     private EstadoPago estado;
     private Instant creadoEn;

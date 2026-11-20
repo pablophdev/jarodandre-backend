@@ -1,0 +1,139 @@
+name: jarodandre
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: "123123"
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysql -h 127.0.0.1 -u root -e 'SELECT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+    restart: unless-stopped
+  ms-auth:
+    build: ./ms-auth
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: "jdbc:mysql://mysql:3306/identidad?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=UTC"
+      DB_USERNAME: ja
+      DB_PASSWORD: "123123"
+      SWAGGER_ENABLED: "true"
+      FRONTEND_ORIGIN: http://localhost:5173
+      LOCAL_ADMIN_ENABLED: "true"
+    volumes:
+      - auth-keys:/app/data/keys
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/v3/api-docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+    restart: unless-stopped
+  ms-catalogo:
+    build: ./ms-catalogo
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: "jdbc:mysql://mysql:3306/catalogo?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=UTC"
+      DB_USERNAME: ja
+      DB_PASSWORD: "123123"
+      SWAGGER_ENABLED: "true"
+      FRONTEND_ORIGIN: http://localhost:5173
+      MS_AUTH_URL: http://ms-auth:8081
+      CATALOGO_INTERNAL_TOKEN: local-jarodandre-interno-2026
+    volumes:
+      - catalogo-imagenes:/app/data/imagenes
+    ports:
+      - "127.0.0.1:8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ms-auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8082/v3/api-docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+    restart: unless-stopped
+  ms-pedidos:
+    build: ./ms-pedidos
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: "jdbc:mysql://mysql:3306/ventas?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=UTC"
+      DB_USERNAME: ja
+      DB_PASSWORD: "123123"
+      SWAGGER_ENABLED: "true"
+      FRONTEND_ORIGIN: http://localhost:5173
+      MS_AUTH_URL: http://ms-auth:8081
+      CATALOGO_INTERNAL_TOKEN: local-jarodandre-interno-2026
+      MS_CATALOGO_URL: http://ms-catalogo:8082
+      PAGO_SIMULADO: "true"
+    ports:
+      - "127.0.0.1:8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ms-auth:
+        condition: service_healthy
+      ms-catalogo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8083/v3/api-docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+    restart: unless-stopped
+  ms-comunicaciones:
+    build: ./ms-comunicaciones
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: "jdbc:mysql://mysql:3306/comunicaciones?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=UTC"
+      DB_USERNAME: ja
+      DB_PASSWORD: "123123"
+      SWAGGER_ENABLED: "true"
+      FRONTEND_ORIGIN: http://localhost:5173
+      MS_AUTH_URL: http://ms-auth:8081
+    ports:
+      - "127.0.0.1:8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ms-auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8084/v3/api-docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+    restart: unless-stopped
+  frontend:
+    build:
+      context: ../ja-joyeria/jarodandre
+    ports:
+      - "127.0.0.1:5173:80"
+    depends_on:
+      ms-catalogo:
+        condition: service_healthy
+      ms-pedidos:
+        condition: service_healthy
+      ms-comunicaciones:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  mysql-data:
+  auth-keys:
+  catalogo-imagenes:

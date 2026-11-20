@@ -25,8 +25,17 @@ import java.util.UUID;
 public class UsuarioController {
     private final UsuarioService usuarios;
     private final CorreoVerificado correo;
+    private final AuthService auth;
 
-    @Operation(summary = "Crear perfil", description = "Operación privada pendiente de configurar el proveedor de identidad y la verificación de correo.")
+    @PostMapping("/admin/usuarios")
+    @Operation(summary = "Crear cuenta desde administración")
+    @SecurityRequirement(name = "BearerAuth")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UsuarioResponse crearCuenta(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CrearUsuarioRequest datos) {
+        return auth.crearUsuario(UUID.fromString(jwt.getSubject()), datos);
+    }
+
+    @Operation(summary = "Crear perfil", description = "Perfil de una identidad existente. Para crear una cuenta con contraseña usar /v1/auth/registro.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Perfil creado"),
             @ApiResponse(responseCode = "400", description = "RUT, comuna o datos del perfil inválidos"),
@@ -40,7 +49,7 @@ public class UsuarioController {
         return usuarios.registrar(UUID.fromString(jwt.getSubject()), correo.obtener(jwt), datos);
     }
 
-    @Operation(summary = "Consultar perfil", description = "Devuelve el perfil activo de la identidad autenticada. El proveedor de autenticación está pendiente de configurar.")
+    @Operation(summary = "Consultar perfil", description = "Devuelve el perfil activo de la identidad autenticada. La sesión usa el JWT emitido por ms-auth.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Perfil obtenido"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
