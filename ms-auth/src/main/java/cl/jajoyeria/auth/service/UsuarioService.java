@@ -73,6 +73,6 @@ public class UsuarioService {
 
     private UsuarioResponse respuesta(Usuario u) {
         return new UsuarioResponse(u.getId(), u.getCorreo(), u.getRut(), u.getNombre(), u.getTelefono(),
-                u.getComuna().getId(), u.getComuna().getRegion().getId(), u.getRol(), u.getEstado());
+                u.getComuna().getId(), u.getComuna().getRegion().getId(), u.getRol(), u.getEstado(), u.getCreadoEn());
     }
 }
