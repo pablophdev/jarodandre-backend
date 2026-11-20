@@ -36,5 +36,6 @@ public record RegistroAuthRequest(
                 : correo.strip().toLowerCase(Locale.ROOT);
 
         nombre = nombre == null ? null : nombre.strip();
+        telefono = telefono == null || telefono.isBlank() ? null : telefono.strip();
     }
 }

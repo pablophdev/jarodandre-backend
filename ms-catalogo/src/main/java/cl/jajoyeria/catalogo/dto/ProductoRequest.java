@@ -34,11 +34,5 @@ public record ProductoRequest(
         @Schema(description = "Indica si la pieza se destaca en la página de inicio", example = "true")
         @NotNull Boolean destacado,
 
-        @Schema(description = "Puntuación de valoración del producto (de 0 a 5)", example = "5")
-        @NotNull @Min(0) @Max(5) Integer valoracion,
-
-        @Schema(description = "Cantidad de reseñas u opiniones de clientes", example = "12")
-        @NotNull @PositiveOrZero Integer cantidadResenas,
-
         @Schema(description = "Estado de stock o disponibilidad", example = "DISPONIBLE", allowableValues = {"DISPONIBLE", "AGOTADO", "CONSULTAR"})
         @NotNull Disponibilidad disponibilidad) {}

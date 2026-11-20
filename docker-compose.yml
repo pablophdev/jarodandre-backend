@@ -50,6 +50,7 @@ services:
       SWAGGER_ENABLED: "true"
       FRONTEND_ORIGIN: http://localhost:5173
       MS_AUTH_URL: http://ms-auth:8081
+      MS_PEDIDOS_URL: http://ms-pedidos:8083
       CATALOGO_INTERNAL_TOKEN: local-jarodandre-interno-2026
     volumes:
       - catalogo-imagenes:/app/data/imagenes

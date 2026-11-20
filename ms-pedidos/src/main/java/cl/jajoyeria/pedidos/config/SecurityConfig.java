@@ -13,11 +13,17 @@ import org.springframework.http.HttpMethod;
 @Configuration
 public class SecurityConfig {
     @Bean
-    SecurityFilterChain api(HttpSecurity http) throws Exception {
+    SecurityFilterChain api(HttpSecurity http, @Value("${app.catalogo.internal-token}") String internalToken) throws Exception {
         return http.cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
+                        .requestMatchers(HttpMethod.GET,"/interno/v1/compras/verificar").access((supplier,context)-> {
+                            String token=context.getRequest().getHeader("X-Internal-Token");
+                            boolean permitido=!internalToken.isBlank() && token!=null && java.security.MessageDigest.isEqual(
+                                    internalToken.getBytes(java.nio.charset.StandardCharsets.UTF_8),token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                            return new org.springframework.security.authorization.AuthorizationDecision(permitido);
+                        })
                         .requestMatchers(HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/v1/admin/**", "/v1/mis-pedidos", "/v1/pedidos/*/vincular").authenticated()
                         .requestMatchers("/v1/carrito", "/v1/carrito/**", "/v1/checkout", "/v1/pedidos/*",

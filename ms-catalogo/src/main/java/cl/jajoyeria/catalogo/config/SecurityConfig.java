@@ -19,8 +19,9 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.GET, "/v1/categorias", "/v1/productos", "/v1/productos/*",
-                                "/v1/publicaciones", "/v1/publicaciones/*", "/media/**",
+                                "/v1/publicaciones", "/v1/publicaciones/*", "/v1/productos/*/resenas", "/media/**",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT,"/v1/productos/*/resenas").authenticated()
                         .requestMatchers("/v1/admin/**").access(admin)
                         .requestMatchers(HttpMethod.POST, "/interno/v1/cotizaciones").access((supplier, context) -> {
                             String token = context.getRequest().getHeader("X-Internal-Token");

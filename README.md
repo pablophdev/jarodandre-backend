@@ -14,6 +14,7 @@ flowchart TD
     P --> A
     M --> A
     P -->|Cotización interna| C
+    C -->|Compra pagada para reseñas| P
     A --> D1[(identidad)]
     C --> D2[(catalogo)]
     P --> D3[(ventas)]
@@ -25,7 +26,7 @@ Las cuatro bases pertenecen a una misma instancia MySQL. Cada servicio administr
 | Servicio | Dominio y tablas | Documentación |
 | --- | --- | --- |
 | `ms-auth` | Usuarios, contraseñas, JWT RSA, roles y territorios. Base `identidad`, con `usuarios`, `regiones` y `comunas`. | [Auth](./ms-auth/README.md) |
-| `ms-catalogo` | Productos, categorías, disponibilidad, imágenes y artículos. Base `catalogo`, con `productos`, `categorias` y `publicaciones`. | [Catálogo](./ms-catalogo/README.md) |
+| `ms-catalogo` | Productos, categorías, disponibilidad, imágenes y artículos. Base `catalogo`, con `productos`, `categorias`, `publicaciones` y `resenas`. | [Catálogo](./ms-catalogo/README.md) |
 | `ms-pedidos` | Carritos, checkout, pagos, despacho y reportes. Base `ventas`, con `carritos`, `carrito_items`, `pedidos`, `pedido_items`, `intentos_pago` y `accesos_invitado`. | [Pedidos](./ms-pedidos/README.md) |
 | `ms-comunicaciones` | Contacto y newsletter. Base `comunicaciones`, con `mensajes_contacto` y `suscripciones`. | [Comunicaciones](./ms-comunicaciones/README.md) |
 
@@ -232,3 +233,15 @@ Las pruebas de integración usan MySQL efímero con Testcontainers y requieren a
 ## Producción
 
 El objetivo posterior es ejecutar cada microservicio en una EC2 y utilizar Amazon API Gateway como entrada de las APIs. La implementación de este repositorio y su Compose corresponden al entorno local. El despliegue de producción deberá definir HTTPS, red privada, credenciales de base por servicio, gestión de secretos, persistencia externa de imágenes y la pasarela de pago.
+
+## Reseñas y validación de formularios
+
+Las estrellas y la cantidad de reseñas se calculan en el backend; no forman parte de `ProductoRequest`. La categoría se envía como `categoriaId` de una categoría existente.
+
+- `GET /v1/productos/{id}/resenas` en catálogo: listado público, paginado con `pagina` (20 por página).
+- `PUT /v1/productos/{id}/resenas`: JWT y JSON `{ "estrellas": 5, "comentario": "Mi opinión" }`. Requiere una compra **pagada**, vinculada al usuario autenticado y que contenga el producto. Una segunda valoración del mismo usuario actualiza su reseña.
+- Catálogo verifica la cuenta con auth y la compra con pedidos mediante `GET /interno/v1/compras/verificar`. Este último exige `X-Internal-Token`, compartido en `CATALOGO_INTERNAL_TOKEN`. `MS_PEDIDOS_URL` apunta a pedidos (`http://ms-pedidos:8083` en Compose; `http://localhost:8083` fuera de Docker).
+
+Liquibase agrega `catalogo.resenas` en `003-resenas.sql`. Esta migración pone a cero los contadores anteriores porque eran manuales o de demostración y no correspondían a compras verificadas. Desde entonces se actualizan con las reseñas reales; el promedio se redondea al entero usado por las tarjetas de la tienda.
+
+Los formularios inválidos devuelven HTTP 400 con `ProblemDetail`, `detail` en español y un mapa `errores` por campo cuando corresponde. En registro, la contraseña requiere 8 a 72 caracteres y el teléfono es opcional; un teléfono vacío se normaliza a `null`.

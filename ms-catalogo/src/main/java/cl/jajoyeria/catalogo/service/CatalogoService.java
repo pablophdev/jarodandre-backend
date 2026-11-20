@@ -87,7 +87,7 @@ public class CatalogoService {
 
     @Transactional
     public ProductoResponse guardar(Long id, ProductoRequest r) {
-        Producto p = id == null ? new Producto() : visible(id);
+        Producto p = id == null ? new Producto() : productos.bloquear(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Producto no encontrado"));
         p.setCategoria(categorias.findById(r.categoriaId()).orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Categoría inválida")));
         p.setNombre(r.nombre().strip());
         p.setDescripcion(r.descripcion().strip());
@@ -97,8 +97,6 @@ public class CatalogoService {
         p.setGrupo(r.grupo());
         p.setInsignia(r.insignia());
         p.setDestacado(r.destacado());
-        p.setValoracion(r.valoracion());
-        p.setCantidadResenas(r.cantidadResenas());
         p.setDisponibilidad(r.disponibilidad());
         return respuesta(productos.saveAndFlush(p));
     }
