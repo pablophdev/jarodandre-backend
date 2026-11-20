@@ -1,40 +1,46 @@
-# Jarodandre · Backend local con MySQL
+# Jarodandre: backend y guía para ejecutarlo
 
-Backend de JA Joyería con cuatro microservicios Java 21 y Spring Boot 3.5.16. Docker Compose levanta MySQL 8.4, los servicios y el frontend React publicado por Nginx. La configuración actual está orientada al desarrollo local con pagos simulados.
+Este repositorio contiene el backend de JA Joyería y los archivos para iniciar la tienda completa en tu computador. Con Docker Compose puedes levantar MySQL, los cuatro servicios y la página web con un solo comando. Los pagos están simulados para desarrollo.
 
-## Arquitectura y responsabilidades
+## Cómo se organiza
+
+La aplicación está dividida en servicios pequeños. Cada uno se ocupa de una parte de la tienda y guarda sus datos en su propia base MySQL. Los servicios se comunican entre sí cuando necesitan información de otra área.
 
 ```mermaid
 flowchart TD
-    UI[React y Nginx · 5173] --> A[ms-auth · 8081]
+    UI[Frontend React servido por Nginx · 5173] --> A[ms-auth · 8081]
     UI --> C[ms-catalogo · 8082]
     UI --> P[ms-pedidos · 8083]
     UI --> M[ms-comunicaciones · 8084]
     C --> A
     P --> A
     M --> A
-    P -->|Cotización interna| C
-    C -->|Compra pagada para reseñas| P
+    P -->|Consulta precios| C
+    C -->|Confirma compra pagada| P
     A --> D1[(identidad)]
     C --> D2[(catalogo)]
     P --> D3[(ventas)]
     M --> D4[(comunicaciones)]
 ```
 
-Las cuatro bases pertenecen a una misma instancia MySQL. Cada servicio administra sus tablas y migraciones. Los datos de otros dominios se consultan mediante HTTP. Los pedidos guardan una copia de los artículos y precios comprados para conservar su historial.
-
-| Servicio | Dominio y tablas | Documentación |
+| Servicio | Para qué sirve | Base de datos |
 | --- | --- | --- |
-| `ms-auth` | Usuarios, contraseñas, JWT RSA, roles y territorios. Base `identidad`, con `usuarios`, `regiones` y `comunas`. | [Auth](./ms-auth/README.md) |
-| `ms-catalogo` | Productos, categorías, disponibilidad, imágenes y artículos. Base `catalogo`, con `productos`, `categorias`, `publicaciones` y `resenas`. | [Catálogo](./ms-catalogo/README.md) |
-| `ms-pedidos` | Carritos, checkout, pagos, despacho y reportes. Base `ventas`, con `carritos`, `carrito_items`, `pedidos`, `pedido_items`, `intentos_pago` y `accesos_invitado`. | [Pedidos](./ms-pedidos/README.md) |
-| `ms-comunicaciones` | Contacto y newsletter. Base `comunicaciones`, con `mensajes_contacto` y `suscripciones`. | [Comunicaciones](./ms-comunicaciones/README.md) |
+| `ms-auth` | Registro, inicio de sesión, cuentas, roles y comunas. | `identidad`: `usuarios`, `regiones`, `comunas`. |
+| `ms-catalogo` | Productos, categorías, imágenes, artículos y reseñas. | `catalogo`: `productos`, `categorias`, `publicaciones`, `resenas`. |
+| `ms-pedidos` | Carrito, compra, pago de prueba, despacho y reportes. | `ventas`: `carritos`, `carrito_items`, `pedidos`, `pedido_items`, `intentos_pago`, `accesos_invitado`. |
+| `ms-comunicaciones` | Mensajes del formulario de contacto y suscripciones al boletín. | `comunicaciones`: `mensajes_contacto`, `suscripciones`. |
 
-Todos usan Spring Web, Validation, Spring Data JPA, Spring Security, Lombok, DTO como `record`, Liquibase y Swagger/OpenAPI. Los paquetes `controller`, `service`, `repository`, `entity`, `dto` y `config` mantienen la misma organización en los cuatro proyectos.
+Las cuatro bases están dentro de la misma instancia de MySQL, pero cada servicio es responsable de sus propias tablas. Por ejemplo, catálogo no lee las tablas de pedidos: consulta al servicio de pedidos para comprobar si una compra fue pagada.
 
-## Requisitos y clonación
+Los proyectos usan Java 21, Spring Boot, Spring Security, JPA y Liquibase. Liquibase prepara y actualiza las tablas al iniciar cada servicio. Swagger muestra la documentación de cada API.
 
-Para Docker se requiere Docker Desktop con motor Linux y Docker Compose v2. Para ejecutar Java y Vite directamente se requieren además JDK 21, Node.js 24 y npm. Cada microservicio incluye Maven Wrapper.
+## Requisitos
+
+Para iniciar todo con Docker necesitas Docker Desktop con el motor Linux encendido y Docker Compose v2. Para ejecutar los proyectos directamente también necesitas JDK 21, Node.js 24 y npm. Cada servicio Java incluye Maven Wrapper.
+
+## Descargar los repositorios
+
+Clona ambos proyectos dentro de la misma carpeta, uno al lado del otro:
 
 ```powershell
 git clone https://github.com/pablophdev/ja-joyeria.git
@@ -42,97 +48,77 @@ git clone https://github.com/pablophdev/jarodandre-backend.git
 cd jarodandre-backend
 ```
 
-Los repositorios deben quedar como carpetas hermanas, porque Compose construye el frontend desde `../ja-joyeria/jarodandre`.
+Compose busca el frontend en `../ja-joyeria/jarodandre`, por eso es importante que las carpetas queden así:
 
 ```text
 carpeta-de-trabajo/
-├── ja-joyeria/jarodandre/
-│   ├── Dockerfile
-│   └── nginx.conf
+├── ja-joyeria/
+│   └── jarodandre/
 └── jarodandre-backend/
-    ├── docker-compose.yml
-    ├── docker/mysql/init.sql
-    ├── ms-auth/Dockerfile
-    ├── ms-catalogo/Dockerfile
-    ├── ms-pedidos/Dockerfile
-    └── ms-comunicaciones/Dockerfile
+    └── docker-compose.yml
 ```
 
-## Arranque con Docker Compose
+## Iniciar la tienda con Docker
+
+Desde la carpeta `jarodandre-backend`, ejecuta:
 
 ```powershell
 docker compose up -d --build
 docker compose ps
 ```
 
-El primer arranque descarga las imágenes y compila las aplicaciones. El contenedor MySQL ejecuta `docker/mysql/init.sql` sobre un volumen vacío. Después Liquibase crea las tablas de cada dominio. La carga inicial incluye 3 regiones, 11 comunas, 4 categorías, 14 productos y 9 publicaciones.
+La primera vez Docker descarga las imágenes y compila las aplicaciones. Después MySQL crea las cuatro bases y Liquibase prepara sus tablas. La carga inicial incluye 3 regiones, 11 comunas, 4 categorías, 14 productos y 9 artículos.
 
-Compose espera a MySQL antes de iniciar los servicios. Catálogo y comunicaciones esperan a auth; pedidos también espera a catálogo. El frontend inicia cuando sus APIs están saludables. Los healthchecks de las APIs usan `/v3/api-docs`, por lo que Compose habilita Swagger con `SWAGGER_ENABLED=true`.
+Espera a que MySQL y los cuatro servicios aparezcan como `Healthy`. El frontend debe aparecer como `Started`. Luego abre la tienda en [http://localhost:5173](http://localhost:5173).
 
-| Recurso | Acceso desde el equipo |
+| Qué quieres abrir | Dirección |
 | --- | --- |
 | Tienda | [http://localhost:5173](http://localhost:5173) |
-| Auth | [Swagger 8081](http://localhost:8081/swagger-ui/index.html) |
-| Catálogo | [Swagger 8082](http://localhost:8082/swagger-ui/index.html) |
-| Pedidos | [Swagger 8083](http://localhost:8083/swagger-ui/index.html) |
-| Comunicaciones | [Swagger 8084](http://localhost:8084/swagger-ui/index.html) |
-| MySQL | `127.0.0.1:3307` |
+| Swagger de autenticación | [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html) |
+| Swagger del catálogo | [http://localhost:8082/swagger-ui/index.html](http://localhost:8082/swagger-ui/index.html) |
+| Swagger de pedidos | [http://localhost:8083/swagger-ui/index.html](http://localhost:8083/swagger-ui/index.html) |
+| Swagger de comunicaciones | [http://localhost:8084/swagger-ui/index.html](http://localhost:8084/swagger-ui/index.html) |
+| MySQL desde tu computador | `127.0.0.1:3307` |
 
-Los puertos publicados se limitan a `127.0.0.1`. Entre contenedores se usan los nombres `mysql`, `ms-auth`, `ms-catalogo`, `ms-pedidos` y `ms-comunicaciones`. MySQL escucha en `3306` dentro de esa red; `3307` es su puerto en el equipo.
+Nginx entrega la página web y dirige sus solicitudes al microservicio que corresponda. Los permisos y la validación de cada operación se controlan en las APIs.
 
-Nginx sirve React y reenvía `/api/auth/`, `/api/catalogo/`, `/api/pedidos/` y `/api/comunicaciones/` al servicio correspondiente, retirando el prefijo. La autenticación y los permisos se comprueban en las APIs.
-
-## Credenciales locales
+## Cuentas de desarrollo
 
 | Cuenta | Usuario | Contraseña |
 | --- | --- | --- |
 | Administrador de la tienda | `admin@jarodandre.local` | `Admin123123` |
-| Aplicación MySQL | `ja` | `123123` |
-| Administración MySQL | `root` | `123123` |
+| Usuario de la aplicación MySQL | `ja` | `123123` |
+| Administrador de MySQL | `root` | `123123` |
 
-Estas cuentas y secretos están definidos para desarrollo local. Compose activa `LOCAL_ADMIN_ENABLED=true`. Auth crea el administrador con RUT `11111111-1` y comuna `1` cuando ese correo aún no existe. Reiniciar el servicio conserva la cuenta y su contraseña.
+Son credenciales locales para desarrollo. Auth crea la cuenta de administrador si todavía no existe. Los datos y la sesión de MySQL se conservan al apagar Compose normalmente.
 
-El usuario `ja` tiene permisos sobre las cuatro bases para simplificar el arranque local. La separación de usuarios SQL por servicio, el almacenamiento de secretos y la configuración de HTTPS corresponden a la preparación de producción.
+## Reseñas y contacto
 
-## Configuración de las APIs
+El administrador crea productos y selecciona una categoría existente. Las estrellas y la cantidad de reseñas no se editan desde administración: se calculan a partir de las valoraciones de clientes.
 
-`application.properties` contiene la configuración compartida y activa `mysql` como perfil predeterminado. `application-mysql.properties` define la conexión y las direcciones de otros servicios. Hibernate valida el esquema creado por Liquibase.
+Una persona debe iniciar sesión y haber pagado por el producto para publicar una reseña. Puede actualizar su propia reseña más adelante. Catálogo verifica la cuenta con auth y la compra con pedidos.
 
-| Variable | Uso y valor local |
-| --- | --- |
-| `SPRING_PROFILES_ACTIVE` | `mysql`. |
-| `DB_URL` | JDBC de la base propia. Fuera de Docker usa `localhost:3307`; dentro usa `mysql:3306`. |
-| `DB_USERNAME`, `DB_PASSWORD` | `ja`, `123123`. |
-| `DB_POOL_SIZE` | Máximo de conexiones por servicio, por defecto `4`. |
-| `PORT` | `8081`, `8082`, `8083` o `8084`, según el servicio. |
-| `FRONTEND_ORIGIN` | `http://localhost:5173`. |
-| `SWAGGER_ENABLED` | Activa UI y documento OpenAPI. Predeterminado `false`, habilitado en Compose. |
-| `MS_AUTH_URL` | URL base de auth para catálogo, pedidos y comunicaciones. |
-| `MS_CATALOGO_URL` | URL base de catálogo para pedidos. |
-| `CATALOGO_INTERNAL_TOKEN` | Secreto compartido por catálogo y pedidos, enviado como `X-Internal-Token`. |
-| `PAGO_SIMULADO` | Habilita el simulador de pedidos; Compose usa `true`. |
-| `LOCAL_ADMIN_ENABLED` | Habilita la creación inicial del administrador. Predeterminado `false`. |
-| `MEDIA_STORAGE` | `local` por defecto. La implementación de S3 se selecciona con `s3`. |
-| `MEDIA_BUCKET`, `AWS_REGION` | Bucket y región al usar S3. |
-| `MYSQL_PORT` | Puerto de MySQL publicado por Compose, por defecto `3307`. |
+Las reseñas se guardan en `catalogo.resenas`. Los mensajes que envían desde el formulario de contacto están en `comunicaciones.mensajes_contacto`. Quienes dejan su correo para recibir novedades se guardan en `comunicaciones.suscripciones`.
 
-Ejemplo de URL JDBC para auth fuera de Docker:
+La migración que crea las reseñas pone en cero los antiguos contadores de estrellas, porque eran valores de demostración y no provenían de compras verificadas. A partir de entonces, el sistema calcula el resumen con reseñas reales. El promedio se redondea a un número entero para mostrarlo en las tarjetas.
 
-```properties
-DB_URL=jdbc:mysql://localhost:3307/identidad?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=UTC
+Para revisar reseñas, catálogo ofrece `GET /v1/productos/{id}/resenas`. Para crear o actualizar una, usa `PUT /v1/productos/{id}/resenas` con un token de sesión y un cuerpo como este:
+
+```json
+{"estrellas": 5, "comentario": "Mi opinión sobre el producto"}
 ```
 
-Para personalizar el administrador se admiten las propiedades `app.local-admin.correo` y `app.local-admin.password`. Auth lee el par RSA desde `app.jwt.private-key` y `app.jwt.public-key`, cuyos valores locales son `file:./data/keys/private.pem` y `file:./data/keys/public.pem`. Si ambos archivos faltan y `app.jwt.generate-local-keys=true`, genera el par al arrancar.
+La solicitud debe corresponder a una compra pagada de esa cuenta. Los formularios con errores responden indicando en español qué dato revisar. La contraseña de registro debe tener entre 8 y 72 caracteres; el teléfono es opcional.
 
-## Ejecutar Java y Vite directamente
+## Ejecutar sin contenedores para las aplicaciones
 
-Iniciar solo la base desde la raíz del backend:
+Puedes usar Docker solo para MySQL y arrancar cada programa desde su carpeta. Primero, desde la raíz del backend:
 
 ```powershell
 docker compose up -d mysql
 ```
 
-Abrir una terminal por servicio. Iniciar auth primero:
+Abre una terminal por cada servicio. Inicia auth primero:
 
 ```powershell
 cd ms-auth
@@ -140,7 +126,7 @@ $env:LOCAL_ADMIN_ENABLED='true'
 .\mvnw.cmd spring-boot:run
 ```
 
-En la terminal de catálogo:
+En una segunda terminal, inicia catálogo:
 
 ```powershell
 cd ms-catalogo
@@ -148,7 +134,7 @@ $env:CATALOGO_INTERNAL_TOKEN='local-jarodandre-interno-2026'
 .\mvnw.cmd spring-boot:run
 ```
 
-En la terminal de pedidos usar el mismo token:
+Inicia pedidos con el mismo valor para `CATALOGO_INTERNAL_TOKEN`:
 
 ```powershell
 cd ms-pedidos
@@ -157,91 +143,80 @@ $env:PAGO_SIMULADO='true'
 .\mvnw.cmd spring-boot:run
 ```
 
-En la terminal de comunicaciones:
+Y luego comunicaciones:
 
 ```powershell
 cd ms-comunicaciones
 .\mvnw.cmd spring-boot:run
 ```
 
-Cada `cd` parte de una terminal situada en la raíz del backend. Las URLs predeterminadas entre servicios usan `localhost:8081` y `localhost:8082`. Para habilitar Swagger al ejecutar Java directamente, definir `$env:SWAGGER_ENABLED='true'` en cada terminal. Finalmente, en `ja-joyeria/jarodandre`, ejecutar `npm ci` y `npm run dev -- --port 5173 --strictPort`.
+Cada terminal debe comenzar en la carpeta raíz del backend antes de ejecutar su `cd`. Para ver Swagger cuando arrancas así, establece `$env:SWAGGER_ENABLED='true'` en cada terminal. Por último, en `ja-joyeria/jarodandre`, ejecuta `npm ci` y `npm run dev -- --port 5173 --strictPort`.
 
-## Autenticación y permisos
+## Configuración
 
-Auth registra contraseñas con BCrypt y emite JWT firmados con RSA. Registro y login devuelven `accessToken`, `expiresIn` y `usuario`. Los servicios verifican firma, emisor, audiencia, vigencia, tipo de token y sujeto. La clave pública se publica en `GET /v1/auth/jwks`.
+Los valores normales de desarrollo ya están definidos. Estas son las opciones más usadas si necesitas cambiar algo:
 
-Los roles son `CLIENTE`, `EMPLEADO` y `ADMIN`, y los estados `PENDIENTE`, `ACTIVO` y `BLOQUEADO`. El registro público asigna `CLIENTE` y `ACTIVO`. Las operaciones administrativas requieren `ADMIN` activo. Catálogo, pedidos y comunicaciones consultan `GET /v1/me` de auth para comprobar el perfil y sus permisos de negocio.
-
-Pedidos usa sesiones privadas para invitados. Los tokens se almacenan como hashes en la base. El token del carrito permite editarlo y resolver su checkout; el token de consulta concede acceso a una orden concreta durante 30 días. La vinculación requiere sesión activa, el token de consulta y un correo coincidente con el del pedido; revoca ese acceso invitado. La autenticación local actual registra correos sin un flujo de verificación por email.
-
-## Compra y consistencia
-
-El servidor cotiza productos antes de confirmar y compara el total con el mostrado al comprador. `DISPONIBLE` y `CONSULTAR` permiten comprar en la demo; `AGOTADO` y los productos retirados bloquean el checkout. El inventario usa disponibilidad declarada.
-
-`Idempotency-Key` identifica un checkout dentro de su carrito. Repetir la clave y los mismos datos recupera la misma orden. Mientras haya un pedido pendiente, el carrito exige resolverlo antes de editar sus líneas. Confirmar el pago simulado registra el pago y vacía el carrito; cancelarlo conserva los artículos. Los bloqueos de fila y las transacciones coordinan esas operaciones.
-
-Los estados de pago son `PENDIENTE`, `PAGADO` y `FALLIDO`. La entrega avanza de `PENDIENTE` a `ENVIADO` y después `COMPLETADO`, con pago aprobado. El comprobante `BOL-...` representa internamente una compra pagada. Una pasarela real y la emisión tributaria requieren integraciones posteriores.
-
-## Datos, migraciones y volúmenes
-
-Liquibase ejecuta los changesets de `src/main/resources/db/changelog` en cada servicio y mantiene sus tablas de seguimiento en la base correspondiente. Las migraciones usan tipos MySQL, UUID binarios y campos JSON para etiquetas y párrafos. Los importes CLP son enteros y las fechas se manejan en UTC.
-
-Agregar nuevos changesets para futuras evoluciones. Auth y comunicaciones aceptan también el checksum concreto de una versión intermedia de la migración local inicial, para conservar el historial existente. Una instalación PostgreSQL anterior requiere exportar y transformar los datos hacia las nuevas bases MySQL.
-
-| Volumen de Compose | Contenido |
+| Variable | Para qué sirve |
 | --- | --- |
-| `mysql-data` | Bases y registros de Liquibase. |
-| `auth-keys` | Par RSA de auth. |
-| `catalogo-imagenes` | Fotografías subidas al almacenamiento local. |
+| `DB_URL` | Dirección JDBC de la base del servicio. En Docker, MySQL está en `mysql:3306`; desde tu computador, en `localhost:3307`. |
+| `DB_USERNAME`, `DB_PASSWORD` | Usuario y contraseña de MySQL. En local son `ja` y `123123`. |
+| `PORT` | Puerto del servicio: 8081, 8082, 8083 o 8084. |
+| `FRONTEND_ORIGIN` | Dirección del frontend permitida por CORS. En local: `http://localhost:5173`. |
+| `SWAGGER_ENABLED` | Muestra u oculta la documentación de Swagger. |
+| `MS_AUTH_URL`, `MS_CATALOGO_URL`, `MS_PEDIDOS_URL` | Direcciones que los servicios usan para comunicarse entre sí. |
+| `CATALOGO_INTERNAL_TOKEN` | Clave compartida para las solicitudes internas entre catálogo y pedidos. |
+| `PAGO_SIMULADO` | Activa el pago de prueba. Compose lo deja activado. |
+| `LOCAL_ADMIN_ENABLED` | Permite crear el administrador de desarrollo al iniciar auth. |
+| `MYSQL_PORT` | Cambia el puerto de MySQL expuesto en el computador. Por defecto es `3307`. |
+| `MEDIA_STORAGE`, `MEDIA_BUCKET`, `AWS_REGION` | Configuración del almacenamiento de imágenes. Por defecto se usa almacenamiento local. |
 
-`docker compose down` conserva los volúmenes. La opción `--volumes` los elimina junto con sus datos. El script `docker/mysql/init.sql` solo se aplica al inicializar un volumen vacío. Las imágenes iniciales del catálogo y blog están incluidas como recursos del JAR; las nuevas usan el almacenamiento seleccionado.
+Las contraseñas, la clave privada de autenticación y el token interno son para desarrollo. Antes de desplegar en producción hay que reemplazarlos por valores privados y configurar la red y HTTPS.
 
-## Operación y comprobaciones
+## Datos y migraciones
+
+Cada servicio tiene sus migraciones en `src/main/resources/db/changelog`. Al arrancar, Liquibase aplica las nuevas migraciones y conserva un registro de las ya ejecutadas. Para ampliar la base, agrega una nueva migración en vez de editar una que ya se haya aplicado.
+
+| Volumen Docker | Qué conserva |
+| --- | --- |
+| `mysql-data` | Las bases y los datos. |
+| `auth-keys` | Las claves usadas por autenticación. |
+| `catalogo-imagenes` | Las imágenes cargadas en catálogo. |
+
+`docker compose down` detiene la tienda y conserva estos datos. `docker compose down --volumes` también borra los volúmenes y su contenido. El archivo de inicialización de MySQL se aplica únicamente cuando se crea un volumen vacío.
+
+## Comandos útiles
 
 ```powershell
-docker compose config --quiet
 docker compose ps
 docker compose logs --tail=100 ms-auth
 docker compose logs --tail=100 ms-pedidos
 docker compose restart ms-pedidos
+docker compose up -d --build
 docker compose down
 ```
 
-Después de modificar código, reconstruir con `docker compose up -d --build`. Para comprobar consultas públicas abrir `/v1/regiones` en auth, `/v1/productos` y `/v1/publicaciones` en catálogo. Swagger documenta los DTO, headers y operaciones de cada servicio.
+Después de cambiar código, vuelve a construir con `docker compose up -d --build`. Si un servicio no inicia, mira sus registros con `docker compose logs --tail=100 nombre-del-servicio`.
 
-Dentro de cada microservicio:
+Para una revisión completa de un servicio Java, desde su carpeta puedes ejecutar:
 
 ```powershell
 .\mvnw.cmd clean verify
 ```
 
-Las pruebas de integración usan MySQL efímero con Testcontainers y requieren acceso al motor Docker. Cuando el motor no está disponible se omiten las suites que así lo declaran. Las imágenes de desarrollo se construyen con `-DskipTests`; la compilación de la imagen y la ejecución de pruebas son comprobaciones distintas.
+Las pruebas de integración usan Docker para preparar MySQL temporal. Las imágenes normales de Compose se construyen sin ejecutar esas pruebas; construir una imagen y correr las pruebas son pasos distintos.
 
-## Diagnóstico
+## Problemas comunes
 
-| Situación | Comprobación |
+| Qué ocurre | Qué revisar |
 | --- | --- |
-| Puerto MySQL ocupado | Compose usa `3307`. Si hace falta otro, definir `MYSQL_PORT` y ajustar las URLs JDBC al ejecutar Java directamente. |
-| Error de conexión a la base | Verificar credenciales, nombre de la base y hostname. Dentro de Docker usar `mysql`, y desde el equipo `localhost`. |
-| Pedido devuelve error al cotizar | Comprobar que catálogo responde y que ambos servicios comparten `CATALOGO_INTERNAL_TOKEN`. |
-| Checkout devuelve `503` | Revisar `PAGO_SIMULADO`; la pasarela real sigue pendiente. |
-| Operación privada devuelve `401` o `403` | Revisar JWT, estado de cuenta, rol y disponibilidad de auth. |
-| Frontend bloqueado por CORS | Abrir `http://localhost:5173` y comprobar `FRONTEND_ORIGIN`. |
-| Servicio `unhealthy` | Leer sus logs. En Compose, los healthchecks requieren Swagger habilitado. |
-| Liquibase rechaza un checksum | Comparar la versión aplicada con el historial del proyecto antes de cambiar una migración existente. |
+| MySQL no puede usar el puerto | El puerto local predeterminado es `3307`. Puedes cambiarlo con `MYSQL_PORT`. |
+| Un servicio no se conecta a MySQL | Revisa el nombre de base, usuario y contraseña. Entre contenedores el servidor se llama `mysql`; desde Windows usa `localhost`. |
+| No se puede completar una compra | Mira los registros de `ms-pedidos`, `ms-catalogo` y MySQL. Confirma que ambos servicios compartan `CATALOGO_INTERNAL_TOKEN`. |
+| Una API dice `401` o `403` | Revisa si iniciaste sesión, el rol de la cuenta y si auth está funcionando. |
+| El navegador bloquea una solicitud | Usa `http://localhost:5173` y revisa `FRONTEND_ORIGIN`. |
+| Un servicio aparece como `unhealthy` | Consulta sus registros. En Compose, Swagger debe estar habilitado para el chequeo de estado. |
+| Liquibase muestra un checksum distinto | Comprueba qué versión de la migración se aplicó antes de hacer cambios en una migración existente. |
 
-## Producción
+## Más adelante: producción
 
-El objetivo posterior es ejecutar cada microservicio en una EC2 y utilizar Amazon API Gateway como entrada de las APIs. La implementación de este repositorio y su Compose corresponden al entorno local. El despliegue de producción deberá definir HTTPS, red privada, credenciales de base por servicio, gestión de secretos, persistencia externa de imágenes y la pasarela de pago.
-
-## Reseñas y validación de formularios
-
-Las estrellas y la cantidad de reseñas se calculan en el backend; no forman parte de `ProductoRequest`. La categoría se envía como `categoriaId` de una categoría existente.
-
-- `GET /v1/productos/{id}/resenas` en catálogo: listado público, paginado con `pagina` (20 por página).
-- `PUT /v1/productos/{id}/resenas`: JWT y JSON `{ "estrellas": 5, "comentario": "Mi opinión" }`. Requiere una compra **pagada**, vinculada al usuario autenticado y que contenga el producto. Una segunda valoración del mismo usuario actualiza su reseña.
-- Catálogo verifica la cuenta con auth y la compra con pedidos mediante `GET /interno/v1/compras/verificar`. Este último exige `X-Internal-Token`, compartido en `CATALOGO_INTERNAL_TOKEN`. `MS_PEDIDOS_URL` apunta a pedidos (`http://ms-pedidos:8083` en Compose; `http://localhost:8083` fuera de Docker).
-
-Liquibase agrega `catalogo.resenas` en `003-resenas.sql`. Esta migración pone a cero los contadores anteriores porque eran manuales o de demostración y no correspondían a compras verificadas. Desde entonces se actualizan con las reseñas reales; el promedio se redondea al entero usado por las tarjetas de la tienda.
-
-Los formularios inválidos devuelven HTTP 400 con `ProblemDetail`, `detail` en español y un mapa `errores` por campo cuando corresponde. En registro, la contraseña requiere 8 a 72 caracteres y el teléfono es opcional; un teléfono vacío se normaliza a `null`.
+La arquitectura planeada contempla el frontend y cada microservicio en AWS, con Amazon API Gateway como entrada para las APIs. Este Compose está hecho para desarrollo local. Antes de producción habrá que preparar HTTPS, secretos privados, una base protegida, almacenamiento externo de imágenes y un proveedor de pagos real.
